@@ -1,0 +1,86 @@
+{
+  "search_tests": [
+    {
+      "query": "cc cream spf",
+      "locale": "en_US",
+      "total": 58,
+      "top_score": 0.989,
+      "top_result": "Mary Kay\u00ae CC Cream Sunscreen Broad Spectrum SPF ",
+      "pass": true
+    },
+    {
+      "query": "anti aging",
+      "locale": "en_US",
+      "total": 5,
+      "top_score": 1.0,
+      "top_result": "Ingredient Glossary",
+      "pass": true
+    },
+    {
+      "query": "lipstick",
+      "locale": "en_US",
+      "total": 13,
+      "top_score": 1.063,
+      "top_result": "Mary Kay\u00ae Gel Semi-Shine Lipstick",
+      "pass": true
+    },
+    {
+      "query": "men skincare",
+      "locale": "en_US",
+      "total": 35,
+      "top_score": 1.0,
+      "top_result": "Product Name A-Z",
+      "pass": true
+    },
+    {
+      "query": "gift under 25",
+      "locale": "en_US",
+      "total": 132,
+      "top_score": 1.199,
+      "top_result": "Cello Gift Bag",
+      "pass": true
+    },
+    {
+      "query": "ingredientes",
+      "locale": "es_US",
+      "total": 12,
+      "top_score": 0.964,
+      "top_result": "Nombre del producto: A a Z",
+      "pass": true
+    },
+    {
+      "query": "foundation",
+      "locale": "en_US",
+      "total": 25,
+      "top_score": 0.982,
+      "top_result": "Product Name A-Z",
+      "pass": true
+    },
+    {
+      "query": "acne",
+      "locale": "en_US",
+      "total": 30,
+      "top_score": 1.013,
+      "top_result": "Clear Proof\u00ae Clarifying Cleansing Gel**",
+      "pass": true
+    },
+    {
+      "query": "fragrance floral",
+      "locale": "en_US",
+      "total": 26,
+      "top_score": 1.0,
+      "top_result": "Product Name A-Z",
+      "pass": true
+    },
+    {
+      "query": "moisturizer dry skin",
+      "locale": "en_US",
+      "total": 77,
+      "top_score": 1.195,
+      "top_result": "Mary Kay\u00ae Hydrating Regimen",
+      "pass": true
+    }
+  ],
+  "passed": 18,
+  "total": 18
+}

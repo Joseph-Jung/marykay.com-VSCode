@@ -1,0 +1,42 @@
+{
+  "robots_txt_url": "https://www.marykay.com/robots.txt",
+  "crawl_delay_specified": false,
+  "crawl_delay_used_seconds": 2.0,
+  "user_agent": "MaryKayCorpusBot/1.0 (educational-research)",
+  "disallowed_paths": [
+    "/account",
+    "/profile",
+    "/login",
+    "/register",
+    "/passwordreset",
+    "/setpassword",
+    "/confirmednewpassword",
+    "/addressbook",
+    "/cart",
+    "/addAllToCart",
+    "/checkout",
+    "/confirmation",
+    "/ibcprofile",
+    "/shopwithme",
+    "/mylists",
+    "/sharefavorites",
+    "/unsubscribe"
+  ],
+  "disallowed_params": [
+    "pmin",
+    "pmax",
+    "prefn1",
+    "prefn2",
+    "prefn3",
+    "prefn4",
+    "prefv1",
+    "prefv2",
+    "prefv3",
+    "prefv4"
+  ],
+  "sitemap_url": "https://www.marykay.com/sitemap_index.xml",
+  "total_sitemap_urls": 298,
+  "private_data_collected": false,
+  "login_bypass_attempted": false,
+  "captcha_bypass_attempted": false
+}

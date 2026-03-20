@@ -1,0 +1,21 @@
+{
+  "total_urls_discovered": 298,
+  "total_urls_crawled": 298,
+  "total_urls_skipped": 0,
+  "total_duplicates_removed": 0,
+  "success_count": 298,
+  "error_count": 0,
+  "errors_by_status_code": {},
+  "avg_response_time_ms": 1261.1,
+  "crawl_start": "2026-02-25T11:22:59.569702+00:00",
+  "crawl_end": "2026-02-25T11:29:42.830098+00:00",
+  "crawl_duration_seconds": 403.3,
+  "pages_by_type": {
+    "product": 28,
+    "category": 190,
+    "content": 42,
+    "faq": 0,
+    "other": 38
+  },
+  "mode": "full"
+}

@@ -1,0 +1,21 @@
+{
+  "total_urls_discovered": 50,
+  "total_urls_crawled": 50,
+  "total_urls_skipped": 0,
+  "total_duplicates_removed": 0,
+  "success_count": 50,
+  "error_count": 0,
+  "errors_by_status_code": {},
+  "avg_response_time_ms": 1163.1,
+  "crawl_start": "2026-02-25T11:21:56.896610+00:00",
+  "crawl_end": "2026-02-25T11:22:59.549664+00:00",
+  "crawl_duration_seconds": 62.7,
+  "pages_by_type": {
+    "product": 14,
+    "category": 29,
+    "content": 4,
+    "faq": 0,
+    "other": 3
+  },
+  "mode": "pilot"
+}
