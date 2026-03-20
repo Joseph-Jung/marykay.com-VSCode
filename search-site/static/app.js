@@ -7,6 +7,7 @@ let currentCategory = null;
 let currentPageType = null;
 let currentPage = 1;
 let debounceTimer = null;
+let searchMode = "keyword"; // "keyword" or "ai"
 
 /* ── DOM References ──────────────────────────────────── */
 const searchInput = document.getElementById("search-input");
@@ -18,6 +19,9 @@ const typesEl = document.getElementById("types-list");
 const detailOverlay = document.getElementById("detail-overlay");
 const detailContent = document.getElementById("detail-content");
 const loadingEl = document.getElementById("loading");
+const aiAnswerBox = document.getElementById("ai-answer-box");
+const aiAnswerText = document.getElementById("ai-answer-text");
+const aiSourcesEl = document.getElementById("ai-sources");
 
 /* ── Initialize ──────────────────────────────────────── */
 document.addEventListener("DOMContentLoaded", () => {
@@ -31,6 +35,26 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closeDetail();
+  });
+
+  // Search mode toggle
+  document.querySelectorAll(".mode-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      searchMode = btn.dataset.mode;
+      document.querySelectorAll(".mode-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      // Update placeholder
+      if (searchMode === "ai") {
+        searchInput.placeholder = "Ask a question about Mary Kay products...";
+        document.querySelector(".sidebar").style.display = "none";
+      } else {
+        searchInput.placeholder = "Search products, skincare, makeup, fragrance...";
+        document.querySelector(".sidebar").style.display = "";
+      }
+      aiAnswerBox.style.display = "none";
+      currentPage = 1;
+      if (searchInput.value.trim()) doSearch();
+    });
   });
 
   // Locale buttons
@@ -56,6 +80,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
 /* ── Search ──────────────────────────────────────────── */
 function onSearchInput() {
+  // Only debounce-search for keyword mode; AI mode waits for Enter/click
+  if (searchMode === "ai") return;
   clearTimeout(debounceTimer);
   debounceTimer = setTimeout(() => {
     currentPage = 1;
@@ -65,7 +91,17 @@ function onSearchInput() {
 
 async function doSearch() {
   currentQuery = searchInput.value.trim();
+
+  if (searchMode === "ai") {
+    await doAiSearch();
+  } else {
+    await doKeywordSearch();
+  }
+}
+
+async function doKeywordSearch() {
   showLoading(true);
+  aiAnswerBox.style.display = "none";
 
   const params = new URLSearchParams();
   params.set("q", currentQuery);
@@ -84,6 +120,66 @@ async function doSearch() {
     resultsGrid.innerHTML = `<div class="empty-state"><h3>Search Error</h3><p>${err.message}</p></div>`;
   }
   showLoading(false);
+}
+
+async function doAiSearch() {
+  if (!currentQuery) {
+    aiAnswerBox.style.display = "none";
+    resultsGrid.innerHTML = `<div class="empty-state" style="grid-column:1/-1"><h3>Ask a question</h3><p>Type a natural language question about Mary Kay products.</p></div>`;
+    resultsCount.innerHTML = "";
+    paginationEl.innerHTML = "";
+    return;
+  }
+
+  showLoading(true);
+  resultsGrid.innerHTML = "";
+  paginationEl.innerHTML = "";
+
+  try {
+    const resp = await fetch(`${API}/ai-search`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: currentQuery }),
+    });
+    const data = await resp.json();
+
+    // Show AI answer
+    aiAnswerBox.style.display = "block";
+    aiAnswerText.innerHTML = formatAiAnswer(data.answer);
+
+    // Show sources
+    if (data.sources && data.sources.length > 0) {
+      resultsCount.innerHTML = `<strong>${data.sources.length}</strong> source products`;
+      aiSourcesEl.innerHTML = `
+        <div class="ai-sources-title">Sources</div>
+        ${data.sources.map(s => {
+          const name = s.product_name || s.title;
+          const price = s.price ? `<span class="ai-source-price">${escapeHtml(s.price)}</span>` : "";
+          return `<a class="ai-source-item" href="${escapeHtml(s.url)}" target="_blank" rel="noopener">${escapeHtml(name)} ${price}</a>`;
+        }).join("")}
+      `;
+    } else {
+      resultsCount.innerHTML = "";
+      aiSourcesEl.innerHTML = "";
+    }
+  } catch (err) {
+    aiAnswerBox.style.display = "block";
+    aiAnswerText.innerHTML = `<span style="color:var(--gray-400)">Error: ${escapeHtml(err.message)}</span>`;
+    aiSourcesEl.innerHTML = "";
+    resultsCount.innerHTML = "";
+  }
+  showLoading(false);
+}
+
+function formatAiAnswer(text) {
+  if (!text) return "";
+  // Basic markdown-like formatting
+  let html = escapeHtml(text);
+  // Bold
+  html = html.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+  // Line breaks
+  html = html.replace(/\n/g, "<br>");
+  return html;
 }
 
 /* ── Render Results ──────────────────────────────────── */

@@ -10,11 +10,13 @@ import re
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, Request
 from fastapi.responses import HTMLResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from rank_bm25 import BM25Okapi
 from sklearn.feature_extraction.text import TfidfVectorizer
+
+from ai_search import ask as ai_search_ask, search_products as ai_search_products
 
 # ── Configuration ──────────────────────────────────────────────────────────────
 
@@ -417,6 +419,17 @@ async def api_categories():
         cats[cat] = cats.get(cat, 0) + 1
     return {"categories": sorted([{"name": k, "count": v} for k, v in cats.items()],
                                   key=lambda x: x["count"], reverse=True)}
+
+
+@app.post("/api/ai-search")
+async def api_ai_search(request: Request):
+    """AI-powered natural language product search using Azure AI Search + GPT-4.1."""
+    body = await request.json()
+    user_query = body.get("query", "").strip()
+    if not user_query:
+        return {"answer": "Please enter a question.", "sources": []}
+    result = ai_search_ask(user_query)
+    return result
 
 
 @app.get("/api/faq")

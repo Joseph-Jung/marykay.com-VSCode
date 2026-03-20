@@ -13,6 +13,11 @@
     <div class="header-inner">
       <a class="logo" href="/">Mary Kay <span>Search</span></a>
 
+      <div class="search-mode-toggle">
+        <button class="mode-btn active" id="mode-keyword" data-mode="keyword">Keyword Search</button>
+        <button class="mode-btn" id="mode-ai" data-mode="ai">AI Search</button>
+      </div>
+
       <div class="search-wrapper">
         <input type="text" id="search-input" class="search-input"
                placeholder="Search products, skincare, makeup, fragrance..."
@@ -51,6 +56,13 @@
       <div id="loading" class="loading" style="display:none">
         <div class="spinner"></div>
         Searching...
+      </div>
+
+      <!-- AI Answer Box (hidden by default) -->
+      <div id="ai-answer-box" class="ai-answer-box" style="display:none">
+        <div class="ai-answer-label">AI Answer</div>
+        <div id="ai-answer-text" class="ai-answer-text"></div>
+        <div id="ai-sources" class="ai-sources"></div>
       </div>
 
       <div id="results-grid" class="results-grid"></div>

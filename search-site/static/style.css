@@ -58,6 +58,105 @@ body {
 
 .logo span { color: var(--gray-700); font-weight: 400; }
 
+/* ── Search Mode Toggle ──────────────────────────────── */
+.search-mode-toggle {
+  display: flex;
+  border: 1px solid var(--gray-300);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.mode-btn {
+  padding: 6px 16px;
+  border: none;
+  background: var(--white);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--gray-600);
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.mode-btn.active {
+  background: var(--pink-primary);
+  color: white;
+}
+
+.mode-btn:hover:not(.active) { background: var(--gray-100); }
+
+/* ── AI Answer Box ──────────────────────────────────── */
+.ai-answer-box {
+  background: linear-gradient(135deg, #fdf2f8, #f0f9ff);
+  border: 1px solid var(--pink-light);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.ai-answer-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--pink-primary);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ai-answer-label::before {
+  content: "\2728";
+}
+
+.ai-answer-text {
+  font-size: 15px;
+  color: var(--gray-800);
+  line-height: 1.8;
+  white-space: pre-wrap;
+}
+
+.ai-sources {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(233, 30, 140, 0.15);
+}
+
+.ai-sources-title {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--gray-400);
+  margin-bottom: 8px;
+}
+
+.ai-source-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  margin: 4px 4px 4px 0;
+  background: var(--white);
+  border: 1px solid var(--gray-200);
+  border-radius: 999px;
+  font-size: 13px;
+  color: var(--gray-700);
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.ai-source-item:hover {
+  border-color: var(--pink-primary);
+  color: var(--pink-primary);
+}
+
+.ai-source-price {
+  font-weight: 600;
+  color: var(--pink-primary);
+}
+
 /* ── Search Bar ──────────────────────────────────────── */
 .search-wrapper {
   flex: 1;
