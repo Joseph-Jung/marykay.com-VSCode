@@ -4,6 +4,13 @@ Mary Kay Search Website — Backend
 Hybrid BM25 + TF-IDF search over the scraped MaryKay corpus.
 """
 
+import os
+# Prevent macOS fork+ObjC crash when gunicorn forks worker processes.
+# The _scproxy module triggers ObjC class initialization in forked children,
+# which is not allowed and causes SIGABRT.
+os.environ.setdefault("OBJC_DISABLE_INITIALIZE_FORK_SAFETY", "YES")
+os.environ.setdefault("no_proxy", "*")
+
 import json
 import math
 import re
