@@ -428,6 +428,21 @@ async def api_categories():
                                   key=lambda x: x["count"], reverse=True)}
 
 
+def _find_local_record(url: str) -> Optional[dict]:
+    """Find a local record matching an AI search result URL."""
+    if not url:
+        return None
+    # Extract path portion for comparison
+    from urllib.parse import urlparse
+    source_path = urlparse(url).path.rstrip("/")
+    for rec in record_map.values():
+        rec_url = rec.get("canonical_url", "") or rec.get("url", "")
+        rec_path = urlparse(rec_url).path.rstrip("/")
+        if rec_path and rec_path == source_path:
+            return rec
+    return None
+
+
 @app.post("/api/ai-search")
 async def api_ai_search(request: Request):
     """AI-powered natural language product search using Azure AI Search + GPT-4.1."""
@@ -436,6 +451,33 @@ async def api_ai_search(request: Request):
     if not user_query:
         return {"answer": "Please enter a question.", "sources": []}
     result = ai_search_ask(user_query)
+
+    # Enrich sources with local record data for product card rendering
+    enriched_sources = []
+    for source in result.get("sources", []):
+        local_rec = _find_local_record(source.get("url", ""))
+        if local_rec:
+            source["content_hash"] = local_rec["content_hash"]
+            source["page_type"] = local_rec["_page_type"]
+            source["locale"] = local_rec.get("locale", "")
+            source["image_url"] = local_rec["_image"].get("src", "")
+            source["image_alt"] = local_rec["_image"].get("alt", "")
+            source["snippet"] = (source.get("description", "") or
+                                 source.get("main_text", ""))[:200]
+            # Use local price if AI search returned empty
+            if not source.get("price"):
+                source["price"] = local_rec["_price"]
+        else:
+            source["content_hash"] = None
+            source["page_type"] = "product"
+            source["locale"] = ""
+            source["image_url"] = (source.get("images", [None]) or [None])[0] or ""
+            source["image_alt"] = source.get("product_name", "") or source.get("title", "")
+            source["snippet"] = (source.get("description", "") or
+                                 source.get("main_text", ""))[:200]
+        enriched_sources.append(source)
+
+    result["sources"] = enriched_sources
     return result
 
 

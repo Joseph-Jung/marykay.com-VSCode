@@ -147,20 +147,16 @@ async function doAiSearch() {
     aiAnswerBox.style.display = "block";
     aiAnswerText.innerHTML = formatAiAnswer(data.answer);
 
-    // Show sources
+    // Show source products as card grid (replacing pills)
+    aiSourcesEl.innerHTML = "";
     if (data.sources && data.sources.length > 0) {
-      resultsCount.innerHTML = `<strong>${data.sources.length}</strong> source products`;
-      aiSourcesEl.innerHTML = `
-        <div class="ai-sources-title">Sources</div>
-        ${data.sources.map(s => {
-          const name = s.product_name || s.title;
-          const price = s.price ? `<span class="ai-source-price">${escapeHtml(s.price)}</span>` : "";
-          return `<a class="ai-source-item" href="${escapeHtml(s.url)}" target="_blank" rel="noopener">${escapeHtml(name)} ${price}</a>`;
-        }).join("")}
-      `;
+      resultsCount.innerHTML = `<strong>${data.sources.length}</strong> related products`;
+      resultsGrid.innerHTML = data.sources.map(s =>
+        renderProductCard(s, currentQuery)
+      ).join("");
     } else {
       resultsCount.innerHTML = "";
-      aiSourcesEl.innerHTML = "";
+      resultsGrid.innerHTML = "";
     }
   } catch (err) {
     aiAnswerBox.style.display = "block";
@@ -173,13 +169,69 @@ async function doAiSearch() {
 
 function formatAiAnswer(text) {
   if (!text) return "";
-  // Basic markdown-like formatting
-  let html = escapeHtml(text);
+  // Extract markdown links before escaping, replace with placeholders
+  const links = [];
+  let processed = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, (match, linkText, url) => {
+    let fullUrl = url;
+    if (url.startsWith("/")) fullUrl = "https://www.marykay.com" + url;
+    else if (!url.startsWith("http")) fullUrl = "https://www.marykay.com/" + url;
+    const idx = links.length;
+    links.push(`<a href="${escapeHtml(fullUrl)}" target="_blank" rel="noopener">${escapeHtml(linkText)}</a>`);
+    return `__LINK_${idx}__`;
+  });
+  // Now escape the rest
+  let html = escapeHtml(processed);
+  // Restore link placeholders
+  links.forEach((link, i) => {
+    html = html.replace(`__LINK_${i}__`, link);
+  });
   // Bold
   html = html.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
   // Line breaks
   html = html.replace(/\n/g, "<br>");
   return html;
+}
+
+/* ── Shared Card Renderer ────────────────────────────── */
+function renderProductCard(r, query) {
+  const badgeClass = r.page_type === "product" ? "badge-product" :
+                     r.page_type === "content" ? "badge-content" : "badge-category";
+
+  const imgSrc = r.image_url || "";
+  const imgAlt = r.image_alt || r.product_name || r.title || "";
+  const imageHtml = imgSrc
+    ? `<img class="card-image" src="${resize(imgSrc, 400)}" alt="${escapeHtml(imgAlt)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=card-image-placeholder>&#x1f48e;</div>'">`
+    : `<div class="card-image-placeholder">&#x1f48e;</div>`;
+
+  const snippetText = r.snippet || r.meta_description || r.description || (r.main_text || "").substring(0, 200);
+  const displaySnippet = query ? highlightTerms(snippetText, query) : escapeHtml(snippetText);
+  const name = r.product_name || r.h1 || r.title;
+
+  const clickAction = r.content_hash
+    ? `onclick="openDetail('${r.content_hash}')"`
+    : `onclick="window.open('${escapeHtml(r.url)}', '_blank')"`;
+
+  const footerHtml = r.confidence
+    ? `<div class="card-footer">
+        <span><span class="confidence-dot confidence-${r.confidence}"></span>${r.confidence}</span>
+        <span>${r.locale === "es_US" ? "ES" : "EN"}</span>
+      </div>`
+    : "";
+
+  return `
+    <div class="product-card" ${clickAction}>
+      <div class="card-image-wrap">
+        ${imageHtml}
+        <span class="card-badge ${badgeClass}">${r.page_type || "product"}</span>
+      </div>
+      <div class="card-body">
+        <div class="card-category">${escapeHtml(r.category || "")}</div>
+        <div class="card-title">${escapeHtml(name)}</div>
+        ${r.price ? `<div class="card-price">${escapeHtml(r.price)}</div>` : ""}
+        <div class="card-snippet">${displaySnippet}</div>
+      </div>
+      ${footerHtml}
+    </div>`;
 }
 
 /* ── Render Results ──────────────────────────────────── */
@@ -201,34 +253,7 @@ function renderResults(data) {
     return;
   }
 
-  resultsGrid.innerHTML = results.map((r) => {
-    const badgeClass = r.page_type === "product" ? "badge-product" :
-                       r.page_type === "content" ? "badge-content" : "badge-category";
-
-    const imageHtml = r.image_url
-      ? `<img class="card-image" src="${resize(r.image_url, 400)}" alt="${escapeHtml(r.image_alt)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=card-image-placeholder>&#x1f48e;</div>'">`
-      : `<div class="card-image-placeholder">&#x1f48e;</div>`;
-
-    const snippet = highlightTerms(r.snippet || r.meta_description, query);
-
-    return `
-      <div class="product-card" onclick="openDetail('${r.content_hash}')">
-        <div class="card-image-wrap">
-          ${imageHtml}
-          <span class="card-badge ${badgeClass}">${r.page_type}</span>
-        </div>
-        <div class="card-body">
-          <div class="card-category">${escapeHtml(r.category)}</div>
-          <div class="card-title">${escapeHtml(r.product_name || r.h1 || r.title)}</div>
-          ${r.price ? `<div class="card-price">${escapeHtml(r.price)}</div>` : ""}
-          <div class="card-snippet">${snippet}</div>
-        </div>
-        <div class="card-footer">
-          <span><span class="confidence-dot confidence-${r.confidence}"></span>${r.confidence}</span>
-          <span>${r.locale === "es_US" ? "ES" : "EN"}</span>
-        </div>
-      </div>`;
-  }).join("");
+  resultsGrid.innerHTML = results.map((r) => renderProductCard(r, query)).join("");
 }
 
 /* ── Render Facets ───────────────────────────────────── */

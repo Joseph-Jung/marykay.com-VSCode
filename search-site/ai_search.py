@@ -24,6 +24,19 @@ API_KEY = os.environ["API_KEY"]
 
 _search_client = SearchClient(SEARCH_ENDPOINT, INDEX_NAME, AzureKeyCredential(SEARCH_KEY))
 
+MARYKAY_BASE = "https://www.marykay.com"
+
+
+def normalize_url(url: str) -> str:
+    """Ensure URL is absolute with marykay.com domain."""
+    if not url:
+        return ""
+    if url.startswith("/"):
+        return MARYKAY_BASE + url
+    if not url.startswith("http"):
+        return MARYKAY_BASE + "/" + url
+    return url
+
 
 def _get_embedding(text: str) -> list[float]:
     """Generate embedding for a query string."""
@@ -64,7 +77,7 @@ def search_products(query: str, top_k: int = 5) -> list[dict]:
     for r in results:
         products.append({
             "title": r.get("title", ""),
-            "url": r.get("url", ""),
+            "url": normalize_url(r.get("url", "")),
             "h1": r.get("h1", ""),
             "description": r.get("description", ""),
             "main_text": r.get("main_text", ""),
@@ -121,9 +134,10 @@ def ask(user_query: str) -> dict:
     system_prompt = (
         "You are a Mary Kay product advisor. Answer the user's question "
         "using ONLY the product information provided below. "
-        "Be helpful, concise, and specific. "
-        "Always mention product names and prices when relevant. "
-        "Cite the product URL for each product you mention. "
+        "Keep your answer SHORT — 2-4 sentences maximum. "
+        "Give a brief, helpful summary. Do NOT list individual products, "
+        "do NOT include prices, sizes, URLs, or 'View product' links in your answer. "
+        "The product details will be displayed separately as product cards. "
         "If the answer is not in the provided context, say so clearly.\n\n"
         f"## Product Context\n\n{context}"
     )
@@ -142,16 +156,24 @@ def ask(user_query: str) -> dict:
     resp.raise_for_status()
     answer = resp.json()["choices"][0]["message"]["content"]
 
-    # Step 4: Return answer + sources
-    sources = [
-        {
+    # Step 4: Return answer + sources (full product data for card rendering)
+    sources = []
+    for r in search_results:
+        sources.append({
             "title": r["title"],
             "url": r["url"],
+            "h1": r["h1"],
             "product_name": r["product_name"],
             "price": r["price"],
+            "size": r["size"],
+            "category": r["category"],
+            "description": r["description"],
+            "main_text": (r.get("main_text", "") or "")[:300],
+            "key_benefits": r["key_benefits"],
+            "shade_options": r["shade_options"],
             "images": r["images"],
-        }
-        for r in search_results
-    ]
+            "score": r["score"],
+            "reranker_score": r["reranker_score"],
+        })
 
     return {"answer": answer, "sources": sources}
