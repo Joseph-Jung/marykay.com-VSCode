@@ -455,6 +455,18 @@ async def api_ai_search(request: Request):
     # Enrich sources with local record data for product card rendering
     enriched_sources = []
     for source in result.get("sources", []):
+        # FAQ sources — pass through without local record matching
+        if source.get("page_type") == "faq":
+            source["content_hash"] = None
+            source["image_url"] = ""
+            source["image_alt"] = ""
+            source["snippet"] = (source.get("main_text", "") or
+                                 source.get("description", ""))[:300]
+            source["locale"] = "en_US"
+            enriched_sources.append(source)
+            continue
+
+        # Product/content sources — enrich with local record data
         local_rec = _find_local_record(source.get("url", ""))
         if local_rec:
             source["content_hash"] = local_rec["content_hash"]
@@ -469,7 +481,7 @@ async def api_ai_search(request: Request):
                 source["price"] = local_rec["_price"]
         else:
             source["content_hash"] = None
-            source["page_type"] = "product"
+            source["page_type"] = source.get("page_type") or "product"
             source["locale"] = ""
             source["image_url"] = (source.get("images", [None]) or [None])[0] or ""
             source["image_alt"] = source.get("product_name", "") or source.get("title", "")

@@ -374,6 +374,22 @@ body {
 .badge-product { background: var(--pink-light); color: var(--pink-primary); }
 .badge-category { background: #dbeafe; color: #1d4ed8; }
 .badge-content { background: #d1fae5; color: #065f46; }
+.badge-faq { background: #ede9fe; color: #6c63ff; }
+
+/* FAQ card variant */
+.faq-card { border-left: 4px solid #6c63ff; }
+.card-faq-icon {
+  font-size: 2.5rem;
+  text-align: center;
+  padding: 2rem 0;
+  color: #6c63ff;
+  background: #f5f3ff;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
 .card-body {
   padding: 14px 16px 16px;

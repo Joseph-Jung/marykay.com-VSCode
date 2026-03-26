@@ -150,7 +150,7 @@ async function doAiSearch() {
     // Show source products as card grid (replacing pills)
     aiSourcesEl.innerHTML = "";
     if (data.sources && data.sources.length > 0) {
-      resultsCount.innerHTML = `<strong>${data.sources.length}</strong> related products`;
+      resultsCount.innerHTML = `<strong>${data.sources.length}</strong> related results`;
       resultsGrid.innerHTML = data.sources.map(s =>
         renderProductCard(s, currentQuery)
       ).join("");
@@ -194,6 +194,25 @@ function formatAiAnswer(text) {
 
 /* ── Shared Card Renderer ────────────────────────────── */
 function renderProductCard(r, query) {
+  // FAQ card — distinct layout without image/price
+  if (r.page_type === "faq") {
+    const faqTitle = escapeHtml(r.product_name || r.title || "");
+    const faqSnippet = r.snippet || r.main_text || r.description || "";
+    const displaySnippet = query ? highlightTerms(faqSnippet, query) : escapeHtml(faqSnippet);
+    return `
+      <div class="product-card faq-card" onclick="window.open('${escapeHtml(r.url)}', '_blank')">
+        <div class="card-image-wrap">
+          <div class="card-faq-icon">&#x2753;</div>
+          <span class="card-badge badge-faq">FAQ</span>
+        </div>
+        <div class="card-body">
+          <div class="card-category">${escapeHtml(r.category || "")}</div>
+          <div class="card-title">${faqTitle}</div>
+          <div class="card-snippet">${displaySnippet}</div>
+        </div>
+      </div>`;
+  }
+
   const badgeClass = r.page_type === "product" ? "badge-product" :
                      r.page_type === "content" ? "badge-content" : "badge-category";
 

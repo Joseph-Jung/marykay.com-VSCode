@@ -69,7 +69,7 @@ def search_products(query: str, top_k: int = 5) -> list[dict]:
         select=[
             "title", "url", "h1", "description", "main_text",
             "product_name", "price", "size", "category",
-            "key_benefits", "shade_options", "images",
+            "key_benefits", "shade_options", "images", "page_type",
         ],
     )
 
@@ -88,6 +88,7 @@ def search_products(query: str, top_k: int = 5) -> list[dict]:
             "key_benefits": r.get("key_benefits", []),
             "shade_options": r.get("shade_options", []),
             "images": r.get("images", []),
+            "page_type": r.get("page_type", ""),
             "score": r.get("@search.score", 0),
             "reranker_score": r.get("@search.reranker_score", None),
         })
@@ -110,36 +111,50 @@ def ask(user_query: str) -> dict:
 
     # Step 2: Build grounding context
     context_parts = []
-    for i, r in enumerate(search_results, 1):
-        name = r["product_name"] or r["title"]
-        benefits = ", ".join(r.get("key_benefits", [])) if r.get("key_benefits") else "N/A"
-        shades = ", ".join(r.get("shade_options", [])) if r.get("shade_options") else "N/A"
-        text_excerpt = (r.get("main_text", "") or "")[:600]
+    faq_count = 0
+    product_count = 0
+    for r in search_results:
+        if r.get("page_type") == "faq":
+            faq_count += 1
+            context_parts.append(
+                f"[FAQ {faq_count}]\n"
+                f"Category: {r['category']}\n"
+                f"Question: {r['title']}\n"
+                f"Answer: {(r.get('main_text', '') or '')[:600]}\n"
+                f"Source: {r['url']}\n"
+            )
+        else:
+            product_count += 1
+            name = r["product_name"] or r["title"]
+            benefits = ", ".join(r.get("key_benefits", [])) if r.get("key_benefits") else "N/A"
+            shades = ", ".join(r.get("shade_options", [])) if r.get("shade_options") else "N/A"
+            text_excerpt = (r.get("main_text", "") or "")[:600]
 
-        context_parts.append(
-            f"[Product {i}]\n"
-            f"Name: {name}\n"
-            f"Price: {r['price']}\n"
-            f"Size: {r['size']}\n"
-            f"Category: {r['category']}\n"
-            f"Key Benefits: {benefits}\n"
-            f"Shade Options: {shades}\n"
-            f"URL: {r['url']}\n"
-            f"Description: {text_excerpt}\n"
-        )
+            context_parts.append(
+                f"[Product {product_count}]\n"
+                f"Name: {name}\n"
+                f"Price: {r['price']}\n"
+                f"Size: {r['size']}\n"
+                f"Category: {r['category']}\n"
+                f"Key Benefits: {benefits}\n"
+                f"Shade Options: {shades}\n"
+                f"URL: {r['url']}\n"
+                f"Description: {text_excerpt}\n"
+            )
 
     context = "\n---\n".join(context_parts)
 
     # Step 3: Call GPT-4.1
     system_prompt = (
-        "You are a Mary Kay product advisor. Answer the user's question "
-        "using ONLY the product information provided below. "
+        "You are a Mary Kay product advisor and customer support assistant. "
+        "Answer the user's question using ONLY the information provided below. "
         "Keep your answer SHORT — 2-4 sentences maximum. "
-        "Give a brief, helpful summary. Do NOT list individual products, "
-        "do NOT include prices, sizes, URLs, or 'View product' links in your answer. "
+        "When FAQ content is provided, use it to answer customer questions directly. "
+        "When product information is provided, give a brief, helpful summary. "
+        "Do NOT list individual products, prices, sizes, URLs, or 'View product' links. "
         "The product details will be displayed separately as product cards. "
         "If the answer is not in the provided context, say so clearly.\n\n"
-        f"## Product Context\n\n{context}"
+        f"## Context\n\n{context}"
     )
 
     headers = {"Content-Type": "application/json", "api-key": API_KEY}
@@ -172,6 +187,7 @@ def ask(user_query: str) -> dict:
             "key_benefits": r["key_benefits"],
             "shade_options": r["shade_options"],
             "images": r["images"],
+            "page_type": r.get("page_type", ""),
             "score": r["score"],
             "reranker_score": r["reranker_score"],
         })
